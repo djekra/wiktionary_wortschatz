@@ -348,7 +348,7 @@ list_PRO                 = ['Personalpronomen','Indefinitpronomen','Demonstrativ
 list_PRO                += ['Interrogativpronomen','Reflexivpronomen','Relativpronomen','Reziprokpronomen']
 list_ADV                 = ['Modaladverb','Lokaladverb','Temporaladverb','Pronominaladverb','Interrogativadverb','Konjunktionaladverb']
 
-list_TRUNC               = ['Präfix','Affix','Suffix','Interfix','Präfixoid','Suffixoid','Gebundenes_Lexem','oid',] 
+list_TRUNC               = ['Präfix','Affix','Suffix','Interfix','Zirkumfix','Präfixoid','Suffixoid','Gebundenes_Lexem','oid',] 
 list_ITJ                 = ['Partikel','Interjektion','Onomatopoetikum']
 list_PTKANT              = ['Grußformel','Antwortpartikel',]
 list_DIV                 = ['Kontraktion','Zahlwort']
