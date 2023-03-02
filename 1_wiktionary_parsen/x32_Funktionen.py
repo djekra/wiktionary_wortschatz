@@ -106,7 +106,7 @@ def pflege_tag_felder(df, translate_tagZ, feld='tag'):
     
     # tagZZ: Spaces und Doppelungen streichen
     t = { ' ':'',  'AX':'A', 'NX':'N', 'PX':'P', 'VX':'V', 'AP':'A', 'VA':'A', 'PV':'V',
-         'AA':'A', 'NN':'N', 'VV':'V', 'PP':'P', 'PA':'P', 'XX':'X', 'XZ':'X', 'ZA':'Z', 'ZN':'Z', 'ZV':'Z', 'ZP':'Z', 'ZX':'Z', 'ZZ':'Z',}
+         'AA':'A', 'NN':'N', 'NA':'N', 'VV':'V', 'PP':'P', 'PA':'P', 'XX':'X', 'XZ':'X', 'ZA':'Z', 'ZN':'Z', 'ZV':'Z', 'ZP':'Z', 'ZX':'Z', 'ZZ':'Z',}
     mask = (df[feld+'ZZ'].str.len() > 1)
     df.loc[mask,feld+'ZZ'] = pak.replace_str( df[mask][feld+'ZZ'], t)   
     mask = (df[feld+'ZZ'].str.len() > 1)  # immer noch
@@ -165,7 +165,7 @@ def pflege_translate_tabelle(df, translate_tagZ, wiktionary_lemma, translate_lex
     
     if translate_lex is not None:    
         
-        translate_lex_ranked  = pak.rank(translate_lex, col_score='score', cols_group='data_id', on_conflict='first')
+        translate_lex_ranked  = pak.rank(translate_lex, col_score='data_score', cols_group='data_id', on_conflict='first')
         
         # lemma_home
         result['lemma_home'] = ''
@@ -259,18 +259,13 @@ def pflege_translate_tabelle(df, translate_tagZ, wiktionary_lemma, translate_lex
     result = pak.update_col(result,          
                             wiktionary_lemma,
                             on='lemma_id',
-                            col='score',
-                            col_rename='lemma_score'
+                            col='lemma_score',
                            )      
 
     result = pflege_tag_felder(result, translate_tagZ)
     result = pak.drop_cols(result, ['tag_0', 'tag_1', 'tagZ']) # wir wollen nur tagZZ, alles andere direkt wieder löschen      
     result = pak.rename_col(result, 'tag','lemma_tag')  
-    result = pak.rename_col(result, 'tagZZ','lemma_tagZZ')  
-    if 'score' in result.columns and not 'data_score' in result.columns:
-        print('renaming score --> data_score')
-        result = pak.rename_col(result, 'score','data_score')      
-    
+    result = pak.rename_col(result, 'tagZZ','lemma_tagZZ')    
     result['lemma_lower']  = result.lemma.str.lower() 
     result = pak.move_cols(result, ['data_id','data_home','data','data_tag','data_tagZZ','data_score','member','lemma_id','lemma_home','lemma','lemma_tag','lemma_tagZZ','lemma_score'])
     result = pak.reset_index(result)
@@ -278,53 +273,51 @@ def pflege_translate_tabelle(df, translate_tagZ, wiktionary_lemma, translate_lex
     
     
 
-def set_translate_lex_score(translate_lex, lexeme_manuell):
+def zzdel_set_translate_lex_score(translate_lex, lexeme_manuell):
     
     translate_lex['f1'] = 1 + translate_lex.data_id.str.count('_')  * translate_lex.data_id.str.count('_')
     translate_lex['f2'] = 1 + translate_lex.lemma_id.str.count('_') * translate_lex.lemma_id.str.count('_')    
     
-    translate_lex['score'] = translate_lex.score.fillna(0)              
-    mask = translate_lex.score == 0
+    translate_lex['data_score'] = translate_lex.data_score.fillna(0)  
+    
+    mask = translate_lex.data_score == 0
     print(translate_lex[mask].shape[0],'Datensätze werden neu bewertet')
-    translate_lex.loc[mask,'score'] = (translate_lex[mask].lemma_score * 4.0 + translate_lex[mask].data_score)  /  translate_lex[mask].f1  /  translate_lex[mask].f2
-    #translate_lex.loc[mask,'score'] /= translate_lex[mask].f1
-    #translate_lex.loc[mask,'score'] /= translate_lex[mask].f2
-    #translate_lex.loc[mask,'score'] /= translate_lex[mask].f1
-    #translate_lex.loc[mask,'score'] /= translate_lex[mask].f2    
+    translate_lex.loc[mask,'data_score'] = (translate_lex[mask].lemma_score * 4.0)  /  translate_lex[mask].f1  /  translate_lex[mask].f2
+
     
     mask2 = translate_lex.data_id.str.endswith('_1')
-    translate_lex.loc[mask & mask2,'score'] /= 2
+    translate_lex.loc[mask & mask2,'data_score'] /= 2
     mask2 = translate_lex.data_id.str.endswith('_2')
-    translate_lex.loc[mask & mask2,'score'] /= 3    
+    translate_lex.loc[mask & mask2,'data_score'] /= 3    
     mask2 = translate_lex.data_id.str.endswith('_3')
-    translate_lex.loc[mask & mask2,'score'] /= 4   
+    translate_lex.loc[mask & mask2,'data_score'] /= 4   
     mask2 = translate_lex.data_id.str.endswith('_4')
-    translate_lex.loc[mask & mask2,'score'] /= 5        
+    translate_lex.loc[mask & mask2,'data_score'] /= 5        
     mask2 = translate_lex.data_id.str.endswith('_5')
-    translate_lex.loc[mask & mask2,'score'] /= 6   
+    translate_lex.loc[mask & mask2,'data_score'] /= 6   
     mask2 = translate_lex.data_id.str.endswith('_6')
-    translate_lex.loc[mask & mask2,'score'] /= 7       
+    translate_lex.loc[mask & mask2,'data_score'] /= 7       
 
     mask2 = translate_lex.lemma_id.str.endswith('_1')
-    translate_lex.loc[mask & mask2,'score'] /= 2
+    translate_lex.loc[mask & mask2,'data_score'] /= 2
     mask2 = translate_lex.lemma_id.str.endswith('_2')
-    translate_lex.loc[mask & mask2,'score'] /= 3    
+    translate_lex.loc[mask & mask2,'data_score'] /= 3    
     mask2 = translate_lex.lemma_id.str.endswith('_3')
-    translate_lex.loc[mask & mask2,'score'] /= 4   
+    translate_lex.loc[mask & mask2,'data_score'] /= 4   
     mask2 = translate_lex.lemma_id.str.endswith('_4')
-    translate_lex.loc[mask & mask2,'score'] /= 5        
+    translate_lex.loc[mask & mask2,'data_score'] /= 5        
     mask2 = translate_lex.lemma_id.str.endswith('_5')
-    translate_lex.loc[mask & mask2,'score'] /= 6   
+    translate_lex.loc[mask & mask2,'data_score'] /= 6   
     mask2 = translate_lex.lemma_id.str.endswith('_6')
-    translate_lex.loc[mask & mask2,'score'] /= 7   
+    translate_lex.loc[mask & mask2,'data_score'] /= 7   
     
     mask = pak.isin(translate_lex, lexeme_manuell, left_on=['data','lemma'],right_on=['lex','lemma'])
-    translate_lex.loc[mask,'score'] += 2
-    translate_lex.loc[mask,'score'] *= 20
+    translate_lex.loc[mask,'data_score'] += 2
+    translate_lex.loc[mask,'data_score'] *= 20
 
     mask = pak.isin(translate_lex, lexeme_manuell, on=['lemma','lemma_tag'])
-    translate_lex.loc[mask,'score'] += 1
-    translate_lex.loc[mask,'score'] *= 10    
+    translate_lex.loc[mask,'data_score'] += 1
+    translate_lex.loc[mask,'data_score'] *= 10    
     
     translate_lex = pak.drop_cols(translate_lex,['f1','f2'])
     return translate_lex
@@ -416,7 +409,7 @@ def check_lemma_test(lemma_test, wiktionary_lemma):
                                       left_on=[ 'lemma','tag_soll'], 
                                       right_on=['lemma','tag_0'], 
                                       col='lemma_id', 
-                                      col_score='score', 
+                                      col_score='lemma_score', 
                                       cond='null', 
                                       return_mask=True,
                                       verbose=False)
@@ -428,7 +421,7 @@ def check_lemma_test(lemma_test, wiktionary_lemma):
                                       left_on=[ 'lemma','tag_soll'], 
                                       right_on=['lemma','tag_1'], 
                                       col='lemma_id', 
-                                      col_score='score', 
+                                      col_score='lemma_score', 
                                       cond='null', 
                                       return_mask=True,
                                       verbose=False)
@@ -440,7 +433,7 @@ def check_lemma_test(lemma_test, wiktionary_lemma):
                                 left_on=[ 'lemma'], 
                                 right_on=['lemma'], 
                                 col='lemma_id', 
-                                col_score='score', 
+                                col_score='lemma_score', 
                                 cond='null',
                                 verbose=False)
 
@@ -450,7 +443,7 @@ def check_lemma_test(lemma_test, wiktionary_lemma):
                                 on='lemma_id', 
                                 col='tag', 
                                 col_rename='tag_ist',
-                                col_score='score', 
+                                col_score='lemma_score', 
                                 verbose=False)
     
     # member_ist
@@ -459,7 +452,7 @@ def check_lemma_test(lemma_test, wiktionary_lemma):
                                 on='lemma_id', 
                                 col='member', 
                                 col_rename='member_ist',
-                                col_score='score', 
+                                col_score='lemma_score', 
                                 verbose=False)
     
     lemma_test = pak.move_cols(lemma_test,'lemma_id','level')
@@ -506,7 +499,7 @@ def check_lex_test(lex_test, translate_lex):
                                     right_on=['data','data_tag_0'], 
                                     col='data_id', 
                                     col_rename='lex_id', 
-                                    col_score='score', 
+                                    col_score='data_score', 
                                     return_mask=True,
                                     verbose=False)
     lex_test.loc[mask,'check_tag'] = 'OK'
@@ -518,7 +511,7 @@ def check_lex_test(lex_test, translate_lex):
                                     right_on=['data','data_tag_1'], 
                                     col='data_id', 
                                     col_rename='lex_id', 
-                                    col_score='score', 
+                                    col_score='data_score', 
                                     cond='null', 
                                     return_mask=True,
                                     verbose=False)
@@ -531,14 +524,14 @@ def check_lex_test(lex_test, translate_lex):
                               right_on=['data'], 
                               col='data_id', 
                               col_rename='lex_id', 
-                              col_score='score', 
+                              col_score='data_score', 
                               cond='null',
                               verbose=False)
 
     # lex_id  -->  data_tag
     # lex_id  -->  lemma_ist
-    lex_test = pak.update_col(lex_test, translate_lex, left_on='lex_id', right_on='data_id', col='data_tag', col_rename='lex_tag_ist', col_score='score',verbose=False)
-    lex_test = pak.update_col(lex_test, translate_lex, left_on='lex_id', right_on='data_id', col='lemma',    col_rename='lemma_ist',   col_score='score',verbose=False)
+    lex_test = pak.update_col(lex_test, translate_lex, left_on='lex_id', right_on='data_id', col='data_tag', col_rename='lex_tag_ist', col_score='data_score',verbose=False)
+    lex_test = pak.update_col(lex_test, translate_lex, left_on='lex_id', right_on='data_id', col='lemma',    col_rename='lemma_ist',   col_score='data_score',verbose=False)
 
     lex_test = pak.move_cols(lex_test,'lex_id','level')
     lex_test = pak.move_cols(lex_test,'lex_tag_soll','lex')

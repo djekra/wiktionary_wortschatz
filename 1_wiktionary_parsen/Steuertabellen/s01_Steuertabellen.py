@@ -330,8 +330,7 @@ member_replaces = {
        'PRE'                       :  'Person_pre',       
        'adjektivische_Deklination' :  'adjNN',   
        'Wikispecies'               :  'Spezies',  
-       'VMaßeinheiten'             :  'Einheit',    
-     #  'Geo_Geo_Ort'               :  'Geo_Ort', 
+       'VMaßeinheiten'             :  'Einheit',       
      
     }
 
