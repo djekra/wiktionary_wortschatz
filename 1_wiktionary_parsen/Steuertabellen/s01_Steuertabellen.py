@@ -408,8 +408,8 @@ translate_tag += [ (name,'LEX_A','Keine Grundform') for name in list_lexeme_A ]
 
 # Zweierkombis
 translate_tag += [('Nachname Substantiv',           'NE',     'Zweierkombis')]
-translate_tag += [('Adjektiv Ptz1',                 'ADJA',   'Zweierkombis')]
-translate_tag += [('Adjektiv Ptz2',                 'ADJA',   'Zweierkombis')]
+translate_tag += [('Adjektiv Ptz1',                 'ADJ1',   'Zweierkombis')]
+translate_tag += [('Adjektiv Ptz2',                 'ADJ2',   'Zweierkombis')]
 translate_tag += [('Verb Hilfsverb',                'VAFIN',  'Zweierkombis')]         
 translate_tag += [('Pronomen Personalpronomen',     'PPER',   'Zweierkombis')]
 translate_tag += [('Pronomen Indefinitpronomen',    'PIAT',   'Zweierkombis')]
@@ -471,12 +471,13 @@ translate_tag += [('Adjektiv',     'ADJA', 'Einer')]
 translate_tag += [('Adverb',       'ADV',  'Einer')]
 translate_tag += [('Pronomen',     'PRO',  'Einer')]
 
-wichtige_tags = ['LEX_V','LEX_A','NN','NE','VVFIN','ADJA','ADV','PRO','CARD','ART','TRUNC','ITJ','VAFIN','KON','PDAT','PRELAT']
+wichtige_tags = ['LEX_V','LEX_A','NN','NE','VVFIN','ADJ1','ADJ2','ADJA','ADV','PRO','CARD','ART','TRUNC','ITJ','VAFIN','KON','PDAT','PRELAT']
 
 
 # Vorrang manuell
 translate_tag += [('PTKANT ITJ',   'PTKANT',   'Vorrang manuell Durchlauf2')]
-translate_tag += [('ADJA Ptz2',    'ADJA',     'Vorrang manuell Durchlauf2')]
+translate_tag += [('ADJA Ptz1',    'ADJ1',     'Vorrang manuell Durchlauf2')]
+translate_tag += [('ADJA Ptz2',    'ADJ2',     'Vorrang manuell Durchlauf2')]
 
 
 # Vorrang

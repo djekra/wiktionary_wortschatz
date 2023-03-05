@@ -46,7 +46,7 @@ def ergänze_felder(df):
 
     # isupper: Ziffern am Anfang gelten auch als Großbuchstabe
     mask = df.lemma.str.contains('^[0-9]')
-    pak.check_mask(df, mask, 0, 600)
+    #pak.check_mask(df, mask, 0, 600)
     df.loc[mask,'isupper'] = True
 
     df = pak.move_cols(df,'isupper','lemma_lower')
@@ -380,16 +380,20 @@ def lade_lex_text(lex_test_filename, level):
     mask = lex_test.lemma_tag == ''
     lex_test.loc[mask,'lemma_tag'] = lex_test[mask].lex_tag  
     
-    spalten = ['lemma','lemma_tag','member','level']
+    #mask = lex_test.lemma_member == ''
+    #lex_test.loc[mask,'lemma_member'] = lex_test[mask].lex_member     
+    
+    spalten = ['lemma','lemma_tag','lemma_member','level']
     lemma_test = pak.reset_index(lex_test[spalten].drop_duplicates())
     
-    lemma_test = pak.rename_col(lemma_test,'lemma_tag','tag_soll')
-    lemma_test = pak.rename_col(lemma_test,'member',   'member_soll')
+    lemma_test = pak.rename_col(lemma_test,'lemma_tag',     'lemma_tag_soll')
+    lemma_test = pak.rename_col(lemma_test,'lemma_member',  'lemma_member_soll')
     lemma_test = pak.move_cols(lemma_test,'level')
     lemma_test['check_tag'] = ''
 
-    lex_test = pak.rename_col(lex_test,'lex_tag',  'lex_tag_soll')
-    lex_test = pak.drop_cols(lex_test,['lemma_tag','member','quelle','def'])
+    lex_test = pak.rename_col(lex_test,'lex_tag',   'lex_tag_soll')
+    lex_test = pak.rename_col(lex_test,'lex_member','lex_member_soll')    
+    lex_test = pak.drop_cols(lex_test,['lemma_tag','lemma_member','quelle','def'])
     lex_test = pak.move_cols(lex_test,'level')
     lex_test['check_tag'] = ''    
     
@@ -406,7 +410,7 @@ def check_lemma_test(lemma_test, wiktionary_lemma):
     ## lemma und tag_0  -->  lemma_id 
     lemma_test, mask = pak.update_col(lemma_test, 
                                       wiktionary_lemma, 
-                                      left_on=[ 'lemma','tag_soll'], 
+                                      left_on=[ 'lemma','lemma_tag_soll'], 
                                       right_on=['lemma','tag_0'], 
                                       col='lemma_id', 
                                       col_score='lemma_score', 
@@ -418,7 +422,7 @@ def check_lemma_test(lemma_test, wiktionary_lemma):
     ## lemma und tag_1  -->  lemma_id 
     lemma_test, mask = pak.update_col(lemma_test, 
                                       wiktionary_lemma, 
-                                      left_on=[ 'lemma','tag_soll'], 
+                                      left_on=[ 'lemma','lemma_tag_soll'], 
                                       right_on=['lemma','tag_1'], 
                                       col='lemma_id', 
                                       col_score='lemma_score', 
@@ -442,7 +446,7 @@ def check_lemma_test(lemma_test, wiktionary_lemma):
                                 wiktionary_lemma, 
                                 on='lemma_id', 
                                 col='tag', 
-                                col_rename='tag_ist',
+                                col_rename='lemma_tag_ist',
                                 col_score='lemma_score', 
                                 verbose=False)
     
@@ -451,21 +455,21 @@ def check_lemma_test(lemma_test, wiktionary_lemma):
                                 wiktionary_lemma, 
                                 on='lemma_id', 
                                 col='member', 
-                                col_rename='member_ist',
+                                col_rename='lemma_member_ist',
                                 col_score='lemma_score', 
                                 verbose=False)
     
     lemma_test = pak.move_cols(lemma_test,'lemma_id','level')
-    lemma_test = pak.move_cols(lemma_test,'tag_ist','tag_soll')
+    lemma_test = pak.move_cols(lemma_test,'lemma_tag_ist','lemma_tag_soll')
     lemma_test = lemma_test.fillna('')
     
     # check_tag
     def check_tag(zeile):
         if zeile.check_tag != '':
             return zeile
-        if zeile.tag_soll == zeile.tag_ist:
+        if zeile.lemma_tag_soll == zeile.lemma_tag_ist:
             zeile.check_tag = 'OK'    
-        elif zeile.tag_soll in zeile.tag_ist:
+        elif zeile.lemma_tag_soll in zeile.lemma_tag_ist:
             zeile.check_tag = 'ok'
         return zeile    
 
@@ -474,16 +478,16 @@ def check_lemma_test(lemma_test, wiktionary_lemma):
     
     # check_member
     def check_member(zeile):
-        if len(zeile.member_soll) == 0:
+        if len(zeile.lemma_member_soll) == 0:
             zeile.check_member = 'ok'
-        elif zeile.member_soll in zeile.member_ist:
+        elif zeile.lemma_member_soll in zeile.lemma_member_ist:
             zeile.check_member = 'OK'
         return zeile    
 
     # Zeilenweise anwenden
     lemma_test['check_member'] = ''
     lemma_test = lemma_test.apply(check_member, axis=1)    
-    
+    lemma_test = pak.move_cols(lemma_test, 'check_tag', 'lemma_tag_ist')
     return lemma_test
 
 
